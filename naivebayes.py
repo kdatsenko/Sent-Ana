@@ -4,6 +4,13 @@ import pickle
 import re
 from numpy import *
 
+run_P1 = False
+run_P2 = True
+
+
+subdirs = [ ]
+
+
 # You will work with the Cornell Movie Reviews dataset. You will want to 
 # it to convert all the words to lowercase, and to get rid of punctuation. 
 # Download the polarity dataset , and randomly split it into a test, 
@@ -13,61 +20,65 @@ from numpy import *
 
 def parseFile(path, filename):
     wordlist = []
-    with open(path + "/" + file,"r") as f:
+    with open(path + "/" + filename,"r") as f:
         for line in f:
             line_lower = line.lower()
             for word in line.split():
                 word = ''.join([i for i in word if i.isalpha()])
                 if word.isalnum(): #final check (empty string, etc)...
                     wordlist.append(word)
-  return wordlist
+    return wordlist
 
 #For entire , count the number of occurences, store in wordDict
-# change so that occurence counts ONLY once for each sample
+# change so that occurrence counts ONLY once for each sample
 
 def parseSet(set, set_labels):
     posDict = {}
     negDict = {}
     for i in range(len(set)):
         sample = set[i]
-        sample_length = len(sample_length)
-        for j in range(len(sample_length))
+        sample_length = len(sample)
+        for j in range(sample_length):
             word = sample[j]
-            if word not in sample[:j] #didn't already occur
+            if word not in sample[:j]:#no occurrence yet
                 if set_labels[i] == 1: #positve
                     if word not in posDict:
-                        posDict[word] = 1 / sample_length #NORMALIZE
+                        posDict[word] = float(1) / sample_length #NORMALIZE
                     else:
-                        posDict[word] += 1 / sample_length
+                        posDict[word] += float(1) / sample_length
                 else: #negative
                     if word not in negDict:
-                        negDict[word] = 1 / sample_length
+                        negDict[word] = float(1) / sample_length
                     else:
-                        negDict[word] += 1 / sample_length
+                        negDict[word] = float(1) / sample_length
     return posDict, negDict
     
 
-def partition_data(n_train=1600, n_val=200, n_test=200):
+def prepare_data():
     path = 'txt_sentoken'
     reviews = []
     review_labels = []
     
-    pos_filelist = os.listdir('txt_sentoken\pos') 
+    pos_filelist = os.listdir('txt_sentoken/pos') 
     for filename in pos_filelist:
-        word_list = parseFile(path, filename)
+        word_list = parseFile(path+'/pos', filename)
         reviews.append(word_list)
         review_labels.append(1)
         
-    neg_filelist = os.listdir('txt_sentoken\neg') 
+    neg_filelist = os.listdir('txt_sentoken/neg') 
     for filename in neg_filelist:
-        word_list = parseFile(path, filename)
+        word_list = parseFile(path+'/neg', filename)
         reviews.append(word_list)
         review_labels.append(0)
+    return reviews, review_labels
 
+    
+def generate_random_set(n_train=1600, n_val=200, n_test=200):
+    reviews, review_labels = prepare_data()
     #Shuffle
     review_and_labels = list(zip(reviews, review_labels))
     random.shuffle(review_and_labels)
-    reviews, review_labels = zip(*c)
+    reviews, review_labels = zip(*review_and_labels)
     
     num_samples = len(review_labels)
     
@@ -80,7 +91,7 @@ def partition_data(n_train=1600, n_val=200, n_test=200):
     test_l = []
     total_num = n_train+n_val+n_test
     
-    if num_imgs >= total_num:
+    if num_samples >= total_num:
         for i in range(0,n_train):
             train_set.append(reviews[i])
             train_l.append(review_labels[i])
@@ -95,8 +106,26 @@ def partition_data(n_train=1600, n_val=200, n_test=200):
     return train_set, train_l, valid_set, valid_l, test_set, test_l
 
 
+    
+## need modification 
+def part1():
+    num_pos = len([f for f in os.listdir('txt_sentoken/pos')])
+    num_neg = len([f for f in os.listdir('txt_sentoken/neg')])
+    print "The number of positive reviews is {0}".format(num_pos)
+    print "The number of negative reviews is {0}".format(num_neg)
+    reviews, review_labels = prepare_data()
+    posDict, negDict = parseSet(reviews, review_labels)
+    # newdict for the combined effect of pos and neg
+    newdict = { k: posDict.get(k, 0) - negDict.get(k, 0) for k in set(posDict) | set(negDict) }
+    Keyword_pos = sorted(newdict, key=newdict.get, reverse=True)[:3]
+    Keyword_neg = sorted(newdict, key=newdict.get, reverse=False)[:3]
+    print Keyword_pos, Keyword_neg
+    
+    
+    
+    
 def part2():
-    train_set, train_l, valid_set, valid_l, test_set, test_l = partition_data()
+    train_set, train_l, valid_set, valid_l, test_set, test_l = generate_random_set()
     
     #Training Data
     posDict, negDict = parseSet(train_set, train_l)
@@ -106,8 +135,8 @@ def part2():
     
     #class prior probabilities (positive, negative)
     train_pos_count = sum(train_l)
-    prob_p = train_pos_count / len(train_l)
-    prob_n = (len(train_l) - train_pos_count) / len(train_l)
+    prob_p = float(train_pos_count) / len(train_l)
+    prob_n = float((len(train_l) - train_pos_count)) / len(train_l)
     
     #tune parameter m...
     
@@ -116,12 +145,11 @@ def part2():
     k_grid = [0.001, 0.01, 0.05, 0.1, 0.5, 1, 5, 10, 20, 50]
     m, k = train_bayes(m_grid, k_grid, posDict, negDict, prob_p, prob_n, valid_set, valid_l)
     
-    print("Final tuned parameters m=" + m + " k=" + k)
+    print("Final tuned parameters m=" + str(m) + " k=" + str(k))
     train_perf = classify_bayes(train_set, train_l, posDict, negDict, prob_p, prob_n, m, k)
-    print("Performance on training set: " + 100.0*train_perf)
-    
+    print("Performance on training set: " + str(100.0*train_perf))
     test_perf = classify_bayes(test_set, test_l, posDict, negDict, prob_p, prob_n, m, k)
-    print("Performance on test set: " + 100.0*test_perf)
+    print("Performance on test set: " + str(100.0*test_perf))
     
     
 def train_bayes(m_grid, k_grid, posDict, negDict, prob_p, prob_n, valid_set, valid_l):
@@ -142,9 +170,10 @@ def make_class_prediction(sample, class_worddict, class_prob, m, k=1):
     count_class = sum(class_worddict.values())
     #compute P(a1, ...an | class)
     for word in sample_words:
+        if word in class_worddict:
         #compute P(ai=1 | class)
-        p_ai = (class_worddict[word] + m*k) / (count_class + k)
-        prediction += log(p_ai)
+            p_ai = float(class_worddict[word] + m*k) / (count_class + k)
+            prediction += log(p_ai)
     prediction = exp(prediction)
     return prediction * class_prob
     
@@ -163,27 +192,18 @@ def classify_bayes(x, t, posDict, negDict, prob_p, prob_n, m, k=1):
             prediction = 1
         if prediction == t[i]:
             hits += 1
-    return hits / len(t)
-
-
-
+    return float(hits) / len(t)
     
-
-
-
     
-  
-
-
-    
-
-
-
-
+if __name__ == "__main__":
+	if run_P1:
+		part1()
+	if run_P2:
+		part2()
+	
 
 
 
-  
 
 
 
