@@ -50,7 +50,7 @@ def parseSet(set, set_labels):
                     if word not in negDict:
                         negDict[word] = float(1) / sample_length
                     else:
-                        negDict[word] = float(1) / sample_length
+                        negDict[word] += float(1) / sample_length
     return posDict, negDict
     
 
@@ -111,15 +111,16 @@ def generate_random_set(n_train=1600, n_val=200, n_test=200):
 def part1():
     num_pos = len([f for f in os.listdir('txt_sentoken/pos')])
     num_neg = len([f for f in os.listdir('txt_sentoken/neg')])
-    print "The number of positive reviews is {0}".format(num_pos)
-    print "The number of negative reviews is {0}".format(num_neg)
+    print("The number of positive reviews is {0}".format(num_pos))
+    print("The number of negative reviews is {0}".format(num_neg))
     reviews, review_labels = prepare_data()
     posDict, negDict = parseSet(reviews, review_labels)
     # newdict for the combined effect of pos and neg
     newdict = { k: posDict.get(k, 0) - negDict.get(k, 0) for k in set(posDict) | set(negDict) }
     Keyword_pos = sorted(newdict, key=newdict.get, reverse=True)[:3]
     Keyword_neg = sorted(newdict, key=newdict.get, reverse=False)[:3]
-    print Keyword_pos, Keyword_neg
+    print(Keyword_pos)
+    print(Keyword_neg)
     
     
     
@@ -129,6 +130,8 @@ def part2():
     
     #Training Data
     posDict, negDict = parseSet(train_set, train_l)
+    print(posDict)
+    
     #save these ?
     #pickle.dump(posDict, open('pos.pickle', 'wb'))
     #pickle.dump(negDict, open('neg.pickle', 'wb'))
@@ -137,17 +140,23 @@ def part2():
     train_pos_count = sum(train_l)
     prob_p = float(train_pos_count) / len(train_l)
     prob_n = float((len(train_l) - train_pos_count)) / len(train_l)
+    print(prob_p)
+    print(prob_n)
     
     #tune parameter m...
     
     # CHANGE THE GRID VALUES.....!!!!
-    m_grid = [0.001, 0.01, 0.05, 0.1, 0.5, 1, 5, 10, 20, 50]
-    k_grid = [0.001, 0.01, 0.05, 0.1, 0.5, 1, 5, 10, 20, 50]
+    m_grid = [1, 2, 3, 4, 5, 6, 7]
+    k_grid = [1, 2, 3, 4, 5, 6, 7]
     m, k = train_bayes(m_grid, k_grid, posDict, negDict, prob_p, prob_n, valid_set, valid_l)
     
     print("Final tuned parameters m=" + str(m) + " k=" + str(k))
     train_perf = classify_bayes(train_set, train_l, posDict, negDict, prob_p, prob_n, m, k)
     print("Performance on training set: " + str(100.0*train_perf))
+    
+    valid_perf = classify_bayes(valid_set, valid_l, posDict, negDict, prob_p, prob_n, m, k)
+    print("Performance on validation set: " + str(100.0*valid_perf))
+    
     test_perf = classify_bayes(test_set, test_l, posDict, negDict, prob_p, prob_n, m, k)
     print("Performance on test set: " + str(100.0*test_perf))
     
@@ -155,8 +164,11 @@ def part2():
 def train_bayes(m_grid, k_grid, posDict, negDict, prob_p, prob_n, valid_set, valid_l):
     best_accuracy = -1
     for m in m_grid: # Smoothing parameter tuning loops
+        print("m: " + str(m))
         for k in k_grid:
+            print("k: " + str(k))
             accuracy = classify_bayes(valid_set, valid_l, posDict, negDict, prob_p, prob_n, m, k)
+            print(accuracy)
             if accuracy > best_accuracy:
                 best_accuracy = accuracy
                 best_params = (m, k)
@@ -167,15 +179,21 @@ def make_class_prediction(sample, class_worddict, class_prob, m, k=1):
     prediction = 0
     # remove duplicates
     sample_words = set(sample)
-    count_class = sum(class_worddict.values())
+    count_class = sum([class_worddict[item] for item in class_worddict])
     #compute P(a1, ...an | class)
     for word in sample_words:
         if word in class_worddict:
         #compute P(ai=1 | class)
-            p_ai = float(class_worddict[word] + m*k) / (count_class + k)
-            prediction += log(p_ai)
-    prediction = exp(prediction)
-    return prediction * class_prob
+            p_ai = float(class_worddict[word]*len(sample_words) + m*k)
+        else:
+            p_ai = float(m*k)
+        prediction += log(p_ai / (count_class + k))
+    #prediction = exp(prediction)
+    #print(prediction)
+    return exp(prediction + log(class_prob))
+    
+    
+    
     
     
 def classify_bayes(x, t, posDict, negDict, prob_p, prob_n, m, k=1):
@@ -196,12 +214,10 @@ def classify_bayes(x, t, posDict, negDict, prob_p, prob_n, m, k=1):
     
     
 if __name__ == "__main__":
-	if run_P1:
-		part1()
-	if run_P2:
-		part2()
-	
-
+    if run_P1:
+        part1()
+    if run_P2:
+        part2()
 
 
 
