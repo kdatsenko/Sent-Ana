@@ -3,6 +3,7 @@ import os
 import pickle
 import re
 from numpy import *
+import tensorflow as tf
 
 run_P1 = False
 run_P2 = True
@@ -43,14 +44,14 @@ def parseSet(set, set_labels):
             if word not in sample[:j]:#no occurrence yet
                 if set_labels[i] == 1: #positve
                     if word not in posDict:
-                        posDict[word] = float(1) / sample_length #NORMALIZE
+                        posDict[word] = float(1) #/ sample_length #NORMALIZE
                     else:
-                        posDict[word] += float(1) / sample_length
+                        posDict[word] += float(1) #/ sample_length
                 else: #negative
                     if word not in negDict:
-                        negDict[word] = float(1) / sample_length
+                        negDict[word] = float(1) #/ sample_length
                     else:
-                        negDict[word] += float(1) / sample_length
+                        negDict[word] += float(1) #/ sample_length
     return posDict, negDict
     
 
@@ -106,7 +107,11 @@ def generate_random_set(n_train=1600, n_val=200, n_test=200):
     return train_set, train_l, valid_set, valid_l, test_set, test_l
 
 
-    
+## THIS NEEDS TO BE LOG ODDS
+## SEE this link
+# http://pages.cs.wisc.edu/~jerryzhu/cs769/nb.pdf
+# Naive Bayes as a Linear Classifier
+
 ## need modification 
 def part1():
     num_pos = len([f for f in os.listdir('txt_sentoken/pos')])
@@ -146,8 +151,8 @@ def part2():
     #tune parameter m...
     
     # CHANGE THE GRID VALUES.....!!!!
-    m_grid = [1, 2, 3, 4, 5, 6, 7]
-    k_grid = [1, 2, 3, 4, 5, 6, 7]
+    m_grid = arange(1, 2, 0.2)
+    k_grid = arange(0, 10, 0.5)
     m, k = train_bayes(m_grid, k_grid, posDict, negDict, prob_p, prob_n, valid_set, valid_l)
     
     print("Final tuned parameters m=" + str(m) + " k=" + str(k))
@@ -175,6 +180,9 @@ def train_bayes(m_grid, k_grid, posDict, negDict, prob_p, prob_n, valid_set, val
     return best_params
 
 
+
+##TODO: calc this (p_ai / (count_class + k) right away, as cond prob
+## Store the values in the same dict... pos or neg dict.
 def make_class_prediction(sample, class_worddict, class_prob, m, k=1):
     prediction = 0
     # remove duplicates
@@ -184,13 +192,14 @@ def make_class_prediction(sample, class_worddict, class_prob, m, k=1):
     for word in sample_words:
         if word in class_worddict:
         #compute P(ai=1 | class)
-            p_ai = float(class_worddict[word]*len(sample_words) + m*k)
+            #p_ai = float(class_worddict[word]*len(sample_words) + m*k)
+            p_ai = float(class_worddict[word] + m*k)
         else:
             p_ai = float(m*k)
         prediction += log(p_ai / (count_class + k))
     #prediction = exp(prediction)
     #print(prediction)
-    return exp(prediction + log(class_prob))
+    return prediction + log(class_prob)
     
     
     
@@ -213,7 +222,16 @@ def classify_bayes(x, t, posDict, negDict, prob_p, prob_n, m, k=1):
     return float(hits) / len(t)
     
     
+    
+
+    
+    
+    
+    
+    
+    
 if __name__ == "__main__":
+    random.seed(0)
     if run_P1:
         part1()
     if run_P2:
