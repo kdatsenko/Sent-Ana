@@ -199,13 +199,13 @@ valid_y, test_x, test_y, vocabulary, verbatim=True):
         plt.ylabel('Accuracy (%)')
         plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
                 ncol=2, mode="expand", borderaxespad=0.)
-        savefig('part4_iteration_vs_accuracy')
+        plt.savefig('part4_iteration_vs_accuracy')
         plt.show()
     
     
     snapshot = {}
-    W_sess = sess.run(W)
-    W_params = W_sess.eval(session=sess)
+    W_params = sess.run(W)
+    #W_params = W_sess.eval(session=sess)
     snapshot["W"] = W_params
     snapshot["vocabulary"] = vocabulary
     cPickle.dump(snapshot, open("log_params.pkl", "wb"))

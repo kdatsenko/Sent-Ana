@@ -4,6 +4,7 @@ import pickle
 import re
 from numpy import *
 import tensorflow as tf
+import pickle as cPickle
 
 run_P1 = False
 run_P2 = True
@@ -180,7 +181,7 @@ def get_condProbabilites(posDict, negDict, count_p, count_n, m, k):
     return wordDict
         
 
-def part2():
+def part2(verbatim=True):
     train_set, train_l, valid_set, valid_l, test_set, test_l = generate_random_set()
     
     #Training Data
@@ -198,23 +199,32 @@ def part2():
     # CHANGE THE GRID VALUES.....!!!!
     m_grid = arange(1, 2, 0.2)
     k_grid = arange(0.5, 10, 0.5)
+    
+    #m_grid = [0.001]
+    #k_grid = [0.009]
+    
     m, k = train_bayes(m_grid, k_grid, posDict, negDict, prob_p, count_class_p, prob_n, count_class_n, valid_set, valid_l)
 
     wordDict = get_condProbabilites(posDict, negDict, count_class_p, count_class_n, m, k)
     
-    default_pos = log(float(m*k)) - log(float(count_class_p + k))
-    default_neg = log(float(m*k)) - log(float(count_class_n + k))
-    
-    print("Final tuned parameters m=" + str(m) + " k=" + str(k))
-    train_perf = get_accuracy(train_set, train_l, wordDict, prob_p, prob_n, \
-    default_pos, default_neg)
-    print("Performance on training set: " + str(100.0*train_perf))
-    valid_perf = get_accuracy(valid_set, valid_l, wordDict, prob_p, prob_n, \
-    default_pos, default_neg)
-    print("Performance on validation set: " + str(100.0*valid_perf))
-    test_perf = get_accuracy(test_set, test_l, wordDict, prob_p, prob_n, \
-    default_pos, default_neg)
-    print("Performance on test set: " + str(100.0*test_perf))
+    if verbatim:
+        default_pos = log(float(m*k)) - log(float(count_class_p + k))
+        default_neg = log(float(m*k)) - log(float(count_class_n + k))
+        
+        print("Final tuned parameters m=" + str(m) + " k=" + str(k))
+        train_perf = get_accuracy(train_set, train_l, wordDict, prob_p, prob_n, \
+        default_pos, default_neg)
+        print("Performance on training set: " + str(100.0*train_perf))
+        valid_perf = get_accuracy(valid_set, valid_l, wordDict, prob_p, prob_n, \
+        default_pos, default_neg)
+        print("Performance on validation set: " + str(100.0*valid_perf))
+        test_perf = get_accuracy(test_set, test_l, wordDict, prob_p, prob_n, \
+        default_pos, default_neg)
+        print("Performance on test set: " + str(100.0*test_perf))
+        
+    snapshot = {}
+    snapshot["bayes_wordDict"] = wordDict
+    cPickle.dump(snapshot, open("bayes_params.pkl", "wb"))
     
     return wordDict
     
@@ -311,7 +321,7 @@ if __name__ == "__main__":
     print("================== RUNNING PART 1 ===================")
     part1()
     print("================== RUNNING PART 2 ===================")
-    wordDict = part2()
+    wordDict = part2(verbatim=True)
     print("================== RUNNING PART 3 ===================")
     part3(wordDict)
 
