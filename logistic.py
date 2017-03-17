@@ -5,6 +5,7 @@ import re
 from numpy import *
 import tensorflow as tf
 import pickle as cPickle
+import matplotlib.pyplot as plt
 
 
 N_LABELS = 2
