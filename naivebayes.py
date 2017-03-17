@@ -200,8 +200,6 @@ def part2(verbatim=True):
     m_grid = arange(1, 2, 0.2)
     k_grid = arange(0.5, 10, 0.5)
     
-    #m_grid = [0.001]
-    #k_grid = [0.009]
     
     m, k = train_bayes(m_grid, k_grid, posDict, negDict, prob_p, count_class_p, prob_n, count_class_n, valid_set, valid_l)
 
