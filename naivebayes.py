@@ -113,6 +113,11 @@ def generate_random_set(n_train=1600, n_val=200, n_test=200):
 # Naive Bayes as a Linear Classifier
 
 ## need modification 
+# Give 3 examples of specific keywords that may be useful, 
+# together with statistics on how often they appear in positive and negative reviews
+#Part 1 I think just need to be finding the most frequenty occuring words, 
+#the fancy ratio stuff comes later in Part 3
+
 def part1():
     num_pos = len([f for f in os.listdir('txt_sentoken/pos')])
     num_neg = len([f for f in os.listdir('txt_sentoken/neg')])
