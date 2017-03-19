@@ -19,8 +19,8 @@ import random
 import operator
 
 
-
-run_P7 = True
+prepare_dataP7 = False
+train_P7 = True
 run_P8 = False
 find_example = False
 
@@ -48,12 +48,16 @@ vocab_size = embeddings.shape[0]
 eb_size = embeddings.shape[1]  
 
 
+
+
 def prepare_data():
     reviews = []
     wordDict = {} #maps words to indices
-    vocabulary = []
+    vocabulary = {} # count occurrences of each word
     
-    pos_filelist = os.listdir('txt_sentoken/pos') 
+    random.seed(0)
+    pos_filelist1 = os.listdir('txt_sentoken/pos')
+    pos_filelist = random.sample(pos_filelist1, 500)
     for filename in pos_filelist:
         wordlist = []
         with open("txt_sentoken/pos/" + filename,"r") as f:
@@ -63,58 +67,47 @@ def prepare_data():
                     word = ''.join([i for i in word if i.isalpha()])
                     if word.isalnum(): #final check (empty string, etc)...
                         wordlist.append(word)
+                        if word not in vocabulary.keys():
+                            vocabulary[word] = 1
+                        else:
+                            vocabulary[word] += 1
+                        
         reviews.append(wordlist)
+    common_vocab = sorted(vocabulary, key=vocabulary.get, reverse=True)[170:175]  
+    
+    filter_indices = {k: v for k, v in indices.items() if v in vocabulary.keys()}
         
-        
-    neg_filelist = os.listdir('txt_sentoken/neg') 
-    for filename in neg_filelist:
-        wordlist = []
-        with open("txt_sentoken/neg/" + filename,"r") as f:
-            for line in f:
-                line_lower = line.lower()
-                for word in line.split():
-                    word = ''.join([i for i in word if i.isalpha()])
-                    if word.isalnum(): #final check (empty string, etc)...
-                        wordlist.append(word)
-        reviews.append(wordlist)
-        
-    valid = list(indices.values())
+    valid = list(filter_indices.values())
     contar = []
+    d = {}
     random.seed(0)
-    random_reviews = random.sample(reviews, 100)
-    for wordlist in random_reviews:
-        for i in range(10, 20):
+
+    for wordlist in reviews:
+        for i in range(1, len(wordlist)-1):
             target = wordlist[i]
             context1 = wordlist[i-1]
             context2 = wordlist[i+1]
-            if target in valid:
-                t_ind = list(indices.keys())[list(indices.values()).index(target)]
-                if context1 in valid and context2 in valid:
-                    c1 = list(indices.keys())[list(indices.values()).index(context1)]
-                    c2 = list(indices.keys())[list(indices.values()).index(context2)]
-                    contar.append([c1, t_ind, 1])
-                    contar.append([c2, t_ind, 1])
-                elif context1 in valid:
-                    c1 = list(indices.keys())[list(indices.values()).index(context1)]
-                    contar.append([c1, t_ind, 1])
-                elif context2 in valid:
-                    c2 = list(indices.keys())[list(indices.values()).index(context2)]
-                    contar.append([c2, t_ind, 1])
-                random.seed(i)
-                v = random.choice(valid)
-                v_ind = list(indices.keys())[list(indices.values()).index(v)]
-                if (v is not context1) and (v is not context2):
-                    contar.append([t_ind, v_ind, 0])
-                random.seed(i+50)
-                v = random.choice(valid)
-                v_ind = list(indices.keys())[list(indices.values()).index(v)]
-                if (v is not context1) and (v is not context2):
-                    contar.append([t_ind, v_ind, 0])
-                random.seed(i+51)
-                v = random.choice(valid)
-                v_ind = list(indices.keys())[list(indices.values()).index(v)]
-                if (v is not context1) and (v is not context2):
-                    contar.append([t_ind, v_ind, 0])                
+            if target in common_vocab and context1 in valid and context2 in valid:
+                #t_ind = list(indices.keys())[list(indices.values()).index(target)]
+                if not target in d:
+                    d[target] = [context1, context2]
+                else:
+                    d[target].append(context1)
+                    d[target].append(context2)
+    
+                
+    random.seed(i)
+    v = random.sample(valid, 500)
+    for tar in d:
+        t_ind = list(indices.keys())[list(indices.values()).index(tar)]
+        for j in range(len(v)):
+            v_ind = list(indices.keys())[list(indices.values()).index(v[j])]
+            if v[j] not in d[tar]:
+                contar.append([t_ind, v_ind, 0])  
+            else:
+                contar.append([t_ind, v_ind, 1]) 
+                    
+
     contar = np.asarray(contar)
     random.shuffle(contar)
         
@@ -129,13 +122,18 @@ def prepare_data():
         mul = (eb0 * eb1.T).flatten()
         x.append(mul)
     x = np.asarray(x)
-    y = [contar [:, 2]]
-    y = np.asarray(y)
-    return x, y.T
+    y_p = contar [:, 2]
+    y = np.zeros((x.shape[0], N_LABELS))
+    for k in range(x.shape[0]):
+        if y_p[k] == 1:
+            y[i, 0] = 1
+        else:
+            y[i, 1] = 1
+    return x, y
             
 
 
-def generate_random_set(x, y, n_train=4000, n_val=300, n_test=300):
+def generate_random_set(x, y, n_train=1800, n_val=300, n_test=300):
     
     num_samples = x.shape[0]
     shuffled_inds = np.random.permutation(num_samples)
@@ -304,8 +302,12 @@ def find_examples(a, b, c):
     
     
 if __name__ == "__main__":
-    if run_P7:
-        part7()
+    if prepare_dataP7:
+        random.seed(0)
+        x, y = prepare_data()
+        train_x, train_y, valid_x, valid_y, test_x, test_y = generate_random_set(x, y)
+    if train_P7:
+        logistic_train(train_x, train_y, valid_x, valid_y, test_x, test_y)
     if run_P8:
         part8("story")
         print("===================================")
