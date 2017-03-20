@@ -19,7 +19,7 @@ import random
 import operator
 
 
-prepare_dataP7 = False
+prepare_dataP7 = True
 train_P7 = True
 run_P8 = False
 find_example = False
@@ -125,10 +125,10 @@ def prepare_data():
     y_p = contar [:, 2]
     y = np.zeros((x.shape[0], N_LABELS))
     for k in range(x.shape[0]):
-        if y_p[k] == 1:
-            y[i, 0] = 1
+        if y_p[k] == 0:
+            y[k, 1] = 1
         else:
-            y[i, 1] = 1
+            y[k, 0] = 1
     return x, y
             
 
@@ -307,6 +307,7 @@ if __name__ == "__main__":
         x, y = prepare_data()
         train_x, train_y, valid_x, valid_y, test_x, test_y = generate_random_set(x, y)
     if train_P7:
+        random.seed(66)
         logistic_train(train_x, train_y, valid_x, valid_y, test_x, test_y)
     if run_P8:
         part8("story")
