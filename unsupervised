@@ -19,7 +19,7 @@ import random
 import operator
 
 
-prepare_dataP7 = True
+prepare_dataP7 = False
 train_P7 = True
 run_P8 = False
 find_example = False
@@ -73,7 +73,7 @@ def prepare_data():
                             vocabulary[word] += 1
                         
         reviews.append(wordlist)
-    test_vocab = sorted(vocabulary, key=vocabulary.get, reverse=True)[170:175]
+    test_vocab = sorted(vocabulary, key=vocabulary.get, reverse=True)[170:173]
     common_vocab = sorted(vocabulary, key=vocabulary.get, reverse=True)[:800]
     
     filter_indices = {k: v for k, v in indices.items() if v in common_vocab}
@@ -82,23 +82,18 @@ def prepare_data():
     contar = []
     d = {}
     
-
+    # create a target-context dict for selected words(test_vocab)
     for wordlist in reviews:
         for i in range(1, len(wordlist)-1):
             target = wordlist[i]
             context1 = wordlist[i-1]
             context2 = wordlist[i+1]
             if target in test_vocab and context1 in valid and context2 in valid:
-                #t_ind = list(indices.keys())[list(indices.values()).index(target)]
                 if not target in d:
                     d[target] = [context1, context2]
                 else:
                     d[target].append(context1)
                     d[target].append(context2)
-                
-    
-                
-    
     
     for tar in d:
         v = random.sample(valid, 500)
@@ -110,12 +105,10 @@ def prepare_data():
             v_ind = list(indices.keys())[list(indices.values()).index(v[j])]
             if v[j] not in d[tar]:
                 contar.append([t_ind, v_ind, 0])  
-                    
-
     contar = np.asarray(contar)
     random.shuffle(contar)
         
-        
+    # process x, y for inputs    
     x_ind = contar[:, :2]
     x = []
     for pair in x_ind:
@@ -137,7 +130,7 @@ def prepare_data():
             
 
 
-def generate_random_set(x, y, n_train=1800, n_val=300, n_test=300):
+def generate_random_set(x, y, n_train=1600, n_val=180, n_test=180):
     
     num_samples = x.shape[0]
     shuffled_inds = np.random.permutation(num_samples)
@@ -170,15 +163,6 @@ def generate_random_set(x, y, n_train=1800, n_val=300, n_test=300):
 
 def logistic_train(train_x, train_y, valid_x, valid_y, test_x, test_y,  verbatim=True):
     
-
-#    embeddings = tf.Variable(all)
-#    W = tf.Variable(tf.truncated_normal([vocab_size, eb_size],
-#                      stddev=1.0 / math.sqrt(eb_size)))
-#    b = tf.Variable(tf.zeros([vocab_size]))
-#    
-#    # For inputs
-#    train_inputs = tf.placeholder(tf.int32, shape=[batch_size])
-#    train_labels = tf.placeholder(tf.int32, shape=[batch_size, 1])
     
     #One fully connected layer 
     
@@ -192,8 +176,8 @@ def logistic_train(train_x, train_y, valid_x, valid_y, test_x, test_y,  verbatim
     y = tf.nn.softmax(layer)
     y_ = tf.placeholder(tf.float32, [None, N_LABELS])
 
-    lam = 0.01
-    decay_penalty =lam*tf.reduce_sum(tf.square(W))
+    lam = 0.0075
+    decay_penalty =lam*tf.reduce_sum(tf.abs(W))
     NLL = -tf.reduce_sum(y_*tf.log(y))+decay_penalty
     
     alpha = 0.005
@@ -213,7 +197,7 @@ def logistic_train(train_x, train_y, valid_x, valid_y, test_x, test_y,  verbatim
     test_error = []
     iter_xvals = []
     
-    for i in range(2000):
+    for i in range(1000):
         batch_xs = train_x 
         batch_ys = train_y
         sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
@@ -259,18 +243,11 @@ def logistic_train(train_x, train_y, valid_x, valid_y, test_x, test_y,  verbatim
     
     snapshot = {}
     W_params = sess.run(W)
-    #W_params = W_sess.eval(session=sess)
     snapshot["W_P7"] = W_params
     cPickle.dump(snapshot, open("log_params.pkl", "wb"))
     
     return W_params #Thetas (excluding theta_0 - the bias b...)
     
-
-def part7():
-    random.seed(0)
-    x, y = prepare_data()
-    train_x, train_y, valid_x, valid_y, test_x, test_y = generate_random_set(x, y)
-    logistic_train(train_x, train_y, valid_x, valid_y, test_x, test_y)
     
 
 def part8(t):
@@ -306,12 +283,11 @@ def find_examples(a, b, c):
     
     
 if __name__ == "__main__":
+    random.seed(0)
     if prepare_dataP7:
-        random.seed(0)
         x, y = prepare_data()
         train_x, train_y, valid_x, valid_y, test_x, test_y = generate_random_set(x, y)
     if train_P7:
-        random.seed(66)
         logistic_train(train_x, train_y, valid_x, valid_y, test_x, test_y)
     if run_P8:
         part8("story")
