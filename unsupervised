@@ -73,9 +73,10 @@ def prepare_data():
                             vocabulary[word] += 1
                         
         reviews.append(wordlist)
-    common_vocab = sorted(vocabulary, key=vocabulary.get, reverse=True)[170:175]  
+    test_vocab = sorted(vocabulary, key=vocabulary.get, reverse=True)[170:175]
+    common_vocab = sorted(vocabulary, key=vocabulary.get, reverse=True)[:1200]
     
-    filter_indices = {k: v for k, v in indices.items() if v in vocabulary.keys()}
+    filter_indices = {k: v for k, v in indices.items() if v in common_vocab}
         
     valid = list(filter_indices.values())
     contar = []
@@ -87,7 +88,7 @@ def prepare_data():
             target = wordlist[i]
             context1 = wordlist[i-1]
             context2 = wordlist[i+1]
-            if target in common_vocab and context1 in valid and context2 in valid:
+            if target in test_vocab and context1 in valid and context2 in valid:
                 #t_ind = list(indices.keys())[list(indices.values()).index(target)]
                 if not target in d:
                     d[target] = [context1, context2]
