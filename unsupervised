@@ -55,7 +55,7 @@ def prepare_data():
     wordDict = {} #maps words to indices
     vocabulary = {} # count occurrences of each word
     
-    random.seed(0)
+    
     pos_filelist1 = os.listdir('txt_sentoken/pos')
     pos_filelist = random.sample(pos_filelist1, 500)
     for filename in pos_filelist:
@@ -81,7 +81,7 @@ def prepare_data():
     valid = list(filter_indices.values())
     contar = []
     d = {}
-    random.seed(0)
+    
 
     for wordlist in reviews:
         for i in range(1, len(wordlist)-1):
@@ -98,9 +98,10 @@ def prepare_data():
                 
     
                 
-    random.seed(i)
-    v = random.sample(valid, 500)
+    
+    
     for tar in d:
+        v = random.sample(valid, 500)
         t_ind = list(indices.keys())[list(indices.values()).index(tar)]
         for cont in d[tar]:
             cont_ind = list(indices.keys())[list(indices.values()).index(cont)]
@@ -212,7 +213,7 @@ def logistic_train(train_x, train_y, valid_x, valid_y, test_x, test_y,  verbatim
     test_error = []
     iter_xvals = []
     
-    for i in range(500):
+    for i in range(2000):
         batch_xs = train_x 
         batch_ys = train_y
         sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
