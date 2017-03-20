@@ -74,7 +74,7 @@ def prepare_data():
                         
         reviews.append(wordlist)
     test_vocab = sorted(vocabulary, key=vocabulary.get, reverse=True)[170:175]
-    common_vocab = sorted(vocabulary, key=vocabulary.get, reverse=True)[:1200]
+    common_vocab = sorted(vocabulary, key=vocabulary.get, reverse=True)[:800]
     
     filter_indices = {k: v for k, v in indices.items() if v in common_vocab}
         
@@ -95,18 +95,20 @@ def prepare_data():
                 else:
                     d[target].append(context1)
                     d[target].append(context2)
+                
     
                 
     random.seed(i)
     v = random.sample(valid, 500)
     for tar in d:
         t_ind = list(indices.keys())[list(indices.values()).index(tar)]
+        for cont in d[tar]:
+            cont_ind = list(indices.keys())[list(indices.values()).index(cont)]
+            contar.append([t_ind, cont_ind, 1])
         for j in range(len(v)):
             v_ind = list(indices.keys())[list(indices.values()).index(v[j])]
             if v[j] not in d[tar]:
                 contar.append([t_ind, v_ind, 0])  
-            else:
-                contar.append([t_ind, v_ind, 1]) 
                     
 
     contar = np.asarray(contar)
