@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Mar 19 23:24:23 2017
+
+@author: lizhuoran
+"""
+from pylab import *
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.cbook as cbook
+import time
+import matplotlib.image as mpimg
+from scipy.ndimage import filters
+import urllib
+from numpy import random
+import scipy.stats
+
+import os
+from scipy.io import loadmat
+
+
+
+
+mu = [[-30, -7], [30, 7]]
+
+Sigma = np.array([[ 289,   51.    ],
+               [  51.,   9.    ]])
+colors = ['r', 'b']
+for i in range(len(mu)):
+    x1, x2 = np.random.multivariate_normal(mu[i], Sigma, 5000).T
+    plt.scatter(x1, x2, color=colors[i])
+
+
+## Logistic Regression
+
+
+def sigmoid(x):
+    '''Compute the sigmoid function '''
+    #d = zeros(shape=(x.shape))
+    d = 1.0 /(1.0 + e ** (-1.0 * x))
+    return d
+
+
+def compute_cost(theta, x, y): 
+    m = x.shape[0] #num trainings
+    theta = reshape(theta,(len(theta),1))
+
+    #y = reshape(y,(len(y),1))
+    
+    J = (1.0/m) * (-transpose(y).dot(log(sigmoid(x.dot(theta)))) - transpose(1-y).dot(log(1-sigmoid(x.dot(theta)))))
+    #grad = transpose((1.0/m)*transpose(sigmoid(x.dot(theta)) - y).dot(x))
+    return J[0][0]#,grad
+
+
+def compute_grad(theta, x, y):
+    m = x.shape[0]
+    grad = transpose((1.0/m)*transpose(sigmoid(x.dot(theta)) - y).dot(x))
+    return  grad
+
+def grad_descent(net, cost, cost_df, train_x, train_y, test_x, test_y, init_w, bias, alpha):
+	EPS = 2e-3
+	prev_w = init_w - 10*EPS
+	w = init_w.copy()
+	max_iter = 200
+	training_size = train_x.shape[1]
+	testing_size = test_x.shape[1]
+	train_perf_curve = np.array([]).reshape(0, 2)
+	test_perf_curve = np.array([]).reshape(0, 2)
+	iter = 0
+	while norm(w - prev_w) > EPS and iter < max_iter:		
+		output = sigmoid(train_x, w, bias)
+		if iter % 50 == 0:
+			test_output = sigmoid(test_x, w, bias)
+			train_perf = exp(-cost(output, train_y)/training_size)
+			test_perf = exp(-cost(test_output, test_y)/testing_size)
+			print "Iter", iter
+			print "Performance for training set: %.3f" % train_perf
+			print "Performance for testing set: %.3f" % test_perf
+			print "W changed: %.10f" % norm(w - prev_w)
+			train_perf_curve = np.concatenate((train_perf_curve, [[iter, train_perf]]))
+			test_perf_curve = np.concatenate((test_perf_curve, [[iter, test_perf]]))
+		prev_w = w.copy()
+		w -= alpha*cost_df(train_x, output, train_y)
+		iter += 1
+	print "iter = ", iter
+	return w, train_perf_curve, test_perf_curve
