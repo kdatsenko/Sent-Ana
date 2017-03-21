@@ -47,8 +47,10 @@ def compare_nb_log():
     
     #Greatest 10 Positive words should show up too...
     print("Printing top 100 thetas for logistic regression: \n")
-    for i in range((vocab_size-100),vocab_size):
-        print("Theta " + str(i+1) + " " + str(sorted[i]) + " Pos Word: " + vocab[sorted_inds[i]])
+    j = 1
+    for i in range(vocab_size-1, (vocab_size-100-1), -1):
+        print("Theta " + str(j) + " " + str(sorted[i]) + " Pos Word: " + vocab[sorted_inds[i]])
+        j += 1
     
     print('\n')
     #NAIVE BAYES
@@ -63,9 +65,10 @@ def compare_nb_log():
         bayes_thetas.append((wordDict_bayes[word][0] - wordDict_bayes[word][1], word))
     bayes_thetas.sort()
     
-    print("Printing top 100 thetas for logistic regression: \n")
+    print("Printing top 100 thetas for naive bayes: \n")
     i = 1
-    for theta in bayes_thetas[-100:]:
+    theta_lst = bayes_thetas[-100:][::-1]
+    for theta in theta_lst:
         print("Theta " + str(i) + " " + str(theta[0]) + \
         " Pos Word: " + theta[1])
         i += 1
