@@ -21,8 +21,8 @@ import operator
 
 prepare_dataP7 = False
 train_P7 = True
-run_P8 = False
-find_example = False
+run_P8 = True
+find_example = True
 
 X_SIZE = 128*128
 N_LABELS = 2

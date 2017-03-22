@@ -169,7 +169,7 @@
 }
 
 \author{\textbf{\hmwkAuthorName}}
-%\date{} % Insert date here if you want it to appear below your name
+\date{March 21, 2017} % Insert date here if you want it to appear below your name
 
 %----------------------------------------------------------------------------------------
 
@@ -678,11 +678,11 @@ Our goal is to show the given word2vec embeddings work for figuring out whether 
 
 Data preparation:
 
-Considering the running time, we restricted our dataset to a reasonable size, while maintaining its demonstration ability. Since we are evaluating each word's context, there is no difference between selecting words from positive or negative reviews for our experiment. Without loss of generality, we randomly sampled 500 positive reviews, and took a small random set of words appeared in these sampled reviews as test vocab, all words in this set should be within the given embeddings. (To make things easier, we chose words with higher than average frequencies, so that there will be enough ([context], target) pairs to investigate) Then we walked through each pair of adjacent words ([context], target) in the sampled reviews, if target exists in test vocab, we add the context word(within the given embeddings) to a list corresponding with this target. \\To create samples of adjacent words, for each target word in test vocab, we paired it up with each of its context words in the list, and label 1 for each pair.  To create samples of unadjacent words, for each word in test vocab, we randomly sampled 500 words in the given embeddings. If the sampled word not adjacent with target, then we create a pair, and add label 0. Randomly shuffle the dataset.  We took a training set with 1600 pairs of words, a validation set with 180 pairs and a test set with 180 pairs.\\
+Considering the running time, we restricted our dataset to a reasonable size, while maintaining its demonstration ability. Since we are evaluating each word's context, there is no difference between selecting words from positive or negative reviews for our experiment. Without loss of generality, we randomly sampled 500 positive reviews, and took a small random set of words appearing in these sampled reviews as test vocabulary, all words in this set should be within the given embeddings. (To make things easier, we chose words with higher than average frequencies, so that there would be enough ([context], target) pairs to investigate) Then we walked through each pair of adjacent words ([context], target) in the sampled reviews, and if the target exists in test vocab, we added the context word(within the given embeddings) to a list corresponding with this target. \\To create samples of adjacent words, for each target word in test vocab we paired it up with each of its context words in the list, and set the label as 1 for each pair. To create samples of non-adjacent words, for each word in test vocab we randomly sampled 500 words in the given embeddings. If the sampled word is not adjacent with target, then we create a pair and assign to it the label 0. Then we randomly shuffle the dataset. We took a training set with 1600 pairs of words, a validation set with 180 pairs and a test set with 180 pairs.\\
 
 Logistic Model:
 
-The logistic model used is very similar with the one from Part4. \\The input layer is of size 128*128, and is fully connected to the output layer. We are still using one-hot encoding for the outputs: [0, 1], [1, 0] represent adjacent and unadjacent pairs respectively. \\ With experiments, we noticed the performance rate is a little higher with L1 regularization, so we chose to use Lasso regularization for our model. Tuning the parameters with grid search, We finalized $\lambda$= 0.0075  for the decay penalty and $\alpha$ = 0.005 for gradient descent. \\
+The logistic model used is very similar with the one from Part $4$. \\The input layer is of size $128\times128$, and is fully connected to the output layer. We are still using one-hot encoding for the outputs: [0, 1], [1, 0] represent adjacent and non-adjacent pairs respectively. \\While experimenting, we noticed the performance rate is a little higher with L1 regularization, so we chose to use Lasso regularization for our model. Tuning the parameters with grid search, We finalized $\lambda$= 0.0075  for the decay penalty and $\alpha$ = 0.005 for gradient descent. \\
 
 Performance:
 
@@ -709,9 +709,9 @@ Thus, we conclude that the given embeddings are useful for predictions for conte
 \clearpage
 
 \begin{homeworkProblem}
-We took the embedding for each word with its embedding given, and calculate the cosine distance from this vector to the vector of embedding for "story" and "good" respectively. The smaller distance with the target embedding, the more similar in context are considered.\\
+We took the embedding for each word with its embedding given, and calculated the cosine distance from this vector to the embedded vector for "story" and "good" respectively. The smaller the cosine distance with the target embedding, the more similar in context the pair is considered to be.\\
 
-\textbf{Results shown below: (ordered with similarity in decrease)}
+\textbf{Results shown below: (ordered by decreasing similarity)}
 
 10 words that appear in similar contexts with story:\\
 ('plot', 0.38237626762673049)\\
@@ -740,13 +740,13 @@ We took the embedding for each word with its embedding given, and calculate the 
 
 \textbf{Two more examples:}
 
-Using the same technique of looking for minimum distance among embedding vectors, we found the following interesting relationships:\\
+Using the same technique of looking for minimum cosine distance among embedding vectors, we found the following interesting relationships:\\
 
 1. word2vec(men) - word2vec(women) = word2vec(man) - word2vec(woman)
 
 2. word2vec(he) - word2vec(him) = word2vec(she) - word2vec(her)\\
 
-Code and experiment results shown below
+Code and \underline{\textbf{experiment results}} shown below
 \begin{lstlisting}
 # Want to find a, b, c, d,  s.t. a+b = c+d
 def find_examples(a, b, c):
