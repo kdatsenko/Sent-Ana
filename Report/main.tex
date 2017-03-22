@@ -671,11 +671,107 @@ Theta 100 1.34361731162 Pos Word: workings
 \end{homeworkProblem}
 
 \clearpage
+\begin{homeworkProblem}
+Our goal is to show the given word2vec embeddings work for figuring out whether a word t appears together with another word w or not using Logistic Regression. \\ 
+
+\textbf{Experiment:} \\
+
+Data preparation:
+
+Considering the running time, we restricted our dataset to a reasonable size, while maintaining its demonstration ability. Since we are evaluating each word's context, there is no difference between selecting words from positive or negative reviews for our experiment. Without loss of generality, we randomly sampled 500 positive reviews, and took a small random set of words appeared in these sampled reviews as test vocab, all words in this set should be within the given embeddings. (To make things easier, we chose words with higher than average frequencies, so that there will be enough ([context], target) pairs to investigate) Then we walked through each pair of adjacent words ([context], target) in the sampled reviews, if target exists in test vocab, we add the context word(within the given embeddings) to a list corresponding with this target. \\To create samples of adjacent words, for each target word in test vocab, we paired it up with each of its context words in the list, and label 1 for each pair.  To create samples of unadjacent words, for each word in test vocab, we randomly sampled 500 words in the given embeddings. If the sampled word not adjacent with target, then we create a pair, and add label 0. Randomly shuffle the dataset.  We took a training set with 1600 pairs of words, a validation set with 180 pairs and a test set with 180 pairs.\\
+
+Logistic Model:
+
+The logistic model used is very similar with the one from Part4. \\The input layer is of size 128*128, and is fully connected to the output layer. We are still using one-hot encoding for the outputs: [0, 1], [1, 0] represent adjacent and unadjacent pairs respectively. \\ With experiments, we noticed the performance rate is a little higher with L1 regularization, so we chose to use Lasso regularization for our model. Tuning the parameters with grid search, We finalized $\lambda$= 0.0075  for the decay penalty and $\alpha$ = 0.005 for gradient descent. \\
+
+Performance:
+
+After 1000 iterations,
+
+The final performance on the training set is:  0.830625\\
+The final validation set accuracy is:  0.822222\\
+The final performance on the test set is:  0.827778
+
+The learning curves of logistic regression model are shown in the following page.
+\\
+
+Thus, we conclude that the given embeddings are useful for predictions for context of words.
+
+\begin{figure}
+\includegraphics[width=1.0\textwidth]{part7_iteration_vs_accuracy.png}
+\end{figure}
+
+
+\end{homeworkProblem}
 
 
 \end{homeworkProblem}
 \clearpage
 
+\begin{homeworkProblem}
+We took the embedding for each word with its embedding given, and calculate the cosine distance from this vector to the vector of embedding for "story" and "good" respectively. The smaller distance with the target embedding, the more similar in context are considered.\\
+
+\textbf{Results shown below: (ordered with similarity in decrease)}
+
+10 words that appear in similar contexts with story:\\
+('plot', 0.38237626762673049)\\
+('film', 0.48049664497375488)\\
+('benito', 0.52907824516296387)\\
+('simmer', 0.54510831832885742)\\
+('sitter', 0.54638951463824337)\\
+('lift', 0.56182195999360562)\\
+('domineering', 0.56201087689270057)\\
+('ricci', 0.56806393646431719)\\
+('interviews', 0.56924068927764893)\\
+('acclaim', 0.56942308362859984)\\
+===================================\\
+10 words that appear in similar contexts with good:\\
+('bad', 0.47773188352584839)\\
+('great', 0.50537475943565369)\\
+('wonderful', 0.52286860346794128)\\
+('reinforcing', 0.53241243958473206)\\
+('decent', 0.53433024883270264)\\
+('funny', 0.53938731785937066)\\
+('manipulate', 0.54369816444505248)\\
+('underused', 0.54780560731887817)\\
+('admiral', 0.5600935554560158)\\
+('perplexing', 0.570656418800354)\\
+\\
+
+\textbf{Two more examples:}
+
+Using the same technique of looking for minimum distance among embedding vectors, we found the following interesting relationships:\\
+
+1. word2vec(men) - word2vec(women) = word2vec(man) - word2vec(woman)
+
+2. word2vec(he) - word2vec(him) = word2vec(she) - word2vec(her)\\
+
+Code and experiment results shown below
+\begin{lstlisting}
+# Want to find a, b, c, d,  s.t. a+b = c+d
+def find_examples(a, b, c):
+    a_ind = list(indices.keys())[list(indices.values()).index(a)]
+    b_ind = list(indices.keys())[list(indices.values()).index(b)]
+    c_ind = list(indices.keys())[list(indices.values()).index(c)]
+    combined = embeddings[a_ind, :] + embeddings[b_ind, :] - embeddings[c_ind, :]
+    likely = {}
+    for i in range(embeddings.shape[0]):
+        s_em = embeddings[i, :]
+        dist = scipy.spatial.distance.cosine(s_em, combined)
+        likely[indices[i]] = dist
+    most_likely = sorted(likely.items(), key=operator.itemgetter(1))[1:4]
+    print (most_likely)
+
+find_examples("men", "woman", "women")
+find_examples("she", "him", "her")
+
+[('men', 0.40587792116513122), ('gesture', 0.56893305567265173), ('man', 0.58096081473026873)]
+[('he', 0.40665561029182806), ('him', 0.4891522414810473), ('it', 0.49161990854717386)]
+
+\end{lstlisting}
+
+
+\end{homeworkProblem}
 
 
 
